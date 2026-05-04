@@ -11,25 +11,26 @@ import { ToastService } from '../../../shared/toast/toast.service';
   standalone: true,
   imports: [CommonModule, BookingCalendarComponent, CurrencyPipe],
   template: `
-    <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100 flex flex-col h-full group hover:shadow-2xl transition-all duration-300">
+    <div class="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl shadow-cyan-100/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
       <div class="relative h-48 overflow-hidden">
         <img [src]="hotel.imageUrl" [alt]="hotel.name" 
-             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-        <div class="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur rounded-full text-xs font-bold text-slate-700 shadow-sm flex items-center gap-1">
-          <span>📍</span> {{ hotel.location }}
+             class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110">
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/45 via-slate-900/5 to-transparent"></div>
+        <div class="absolute left-4 top-4 flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-700 shadow-sm backdrop-blur">
+          <span>Loc</span> {{ hotel.location }}
         </div>
       </div>
       
-      <div class="p-5 flex-grow flex flex-col">
-        <div class="flex justify-between items-start mb-2">
-          <h3 class="text-xl font-bold text-slate-800">{{ hotel.name }}</h3>
+      <div class="flex flex-grow flex-col p-5">
+        <div class="mb-2 flex items-start justify-between gap-3">
+          <h3 class="text-2xl font-black text-slate-800">{{ hotel.name }}</h3>
           <div class="text-right">
-            <span class="text-primary-600 font-extrabold text-lg">{{ hotel.pricePerNight | currency:'INR':'symbol':'1.0-0' }}</span>
-            <span class="text-slate-400 text-[10px] block font-medium">per night</span>
+            <span class="text-lg font-extrabold text-primary-700">{{ hotel.pricePerNight | currency:'INR':'symbol':'1.0-0' }}</span>
+            <span class="block text-[10px] font-medium text-slate-400">per night</span>
           </div>
         </div>
         
-        <p class="text-slate-500 text-sm line-clamp-2 mb-4 leading-relaxed flex-grow">
+        <p class="mb-4 flex-grow text-sm leading-relaxed text-slate-500 line-clamp-2">
           {{ hotel.description }}
         </p>
 
@@ -42,8 +43,8 @@ import { ToastService } from '../../../shared/toast/toast.service';
         <button 
           (click)="bookNow()"
           [disabled]="!selectedDate() || isBooking"
-          class="mt-6 w-full btn-primary py-3 flex justify-center items-center gap-2">
-          <span *ngIf="isBooking" class="animate-spin border-2 border-white/30 border-t-white rounded-full h-4 w-4"></span>
+          class="btn-primary mt-6 flex w-full items-center justify-center gap-2 py-3">
+          <span *ngIf="isBooking" class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
           {{ isBooking ? 'Processing...' : 'Book It' }}
         </button>
       </div>

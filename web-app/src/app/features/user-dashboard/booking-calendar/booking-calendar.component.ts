@@ -6,8 +6,8 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="mt-4">
-      <h4 class="text-sm font-semibold text-slate-700 mb-3">Select a date (Next 7 days)</h4>
+    <div class="mt-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-3">
+      <h4 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600">Select Date (Next 7 Days)</h4>
       <div class="grid grid-cols-7 gap-2">
         <button 
           *ngFor="let day of weekDays"
@@ -15,11 +15,11 @@ import { CommonModule } from '@angular/common';
           [disabled]="day.unavailable"
           [ngClass]="{
             'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-200': selectedDate === day.isoDate && !day.unavailable,
-            'bg-slate-50 text-emerald-600 border-emerald-100 hover:border-emerald-300': selectedDate !== day.isoDate && !day.unavailable,
+            'bg-white text-emerald-700 border-emerald-100 hover:border-emerald-300': selectedDate !== day.isoDate && !day.unavailable,
             'bg-slate-100 text-slate-300 border-slate-100 cursor-not-allowed opacity-50': day.unavailable
           }"
-          class="flex flex-col items-center justify-center p-2 rounded-xl border transition-all duration-200">
-          <span class="text-[10px] uppercase font-bold tracking-tighter">{{ day.name }}</span>
+          class="flex flex-col items-center justify-center rounded-xl border p-2 transition-all duration-200">
+          <span class="text-[10px] font-bold uppercase tracking-tighter">{{ day.name }}</span>
           <span class="text-base font-extrabold">{{ day.date }}</span>
           <span *ngIf="day.unavailable" class="text-[8px] line-through decoration-red-400">X</span>
         </button>

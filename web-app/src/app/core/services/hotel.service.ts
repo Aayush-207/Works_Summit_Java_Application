@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, EnvironmentInjector, runInInjectionContext } from '@angular/core';
 import { Firestore, collection, collectionData, addDoc, doc, updateDoc, query, orderBy } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { Hotel } from '../models/hotel.model';
@@ -7,23 +7,31 @@ import { Hotel } from '../models/hotel.model';
   providedIn: 'root'
 })
 export class HotelService {
+  private injector = inject(EnvironmentInjector);
   private firestore = inject(Firestore);
-  private hotelsCollection = collection(this.firestore, 'hotels');
 
-  getHotels(): Observable<Hotel[]> {
-    const q = query(this.hotelsCollection, orderBy('createdAt', 'desc'));
-    return collectionData(q, { idField: 'id' }) as Observable<Hotel[]>;
+  private inContext<T>(fn: () => T): T {
+    return runInInjectionContext(this.injector, fn);
   }
 
-  async addHotel(hotel: Hotel): Promise<void> {
-    await addDoc(this.hotelsCollection, {
-      ...hotel,
-      createdAt: new Date()
+  getHotels(): Observable<Hotel[]> {
+    return this.inContext(() => {
+      const hotelsCollection = collection(this.firestore, 'hotels');
+      const q = query(hotelsCollection, orderBy('createdAt', 'desc'));
+      return collectionData(q, { idField: 'id' }) as Observable<Hotel[]>;
     });
   }
 
+  async addHotel(hotel: Hotel): Promise<void> {
+    const hotelsCollection = this.inContext(() => collection(this.firestore, 'hotels'));
+    await this.inContext(() => addDoc(hotelsCollection, {
+      ...hotel,
+      createdAt: new Date()
+    }));
+  }
+
   async updateHotelUnavailableDates(hotelId: string, dates: string[]): Promise<void> {
-    const hotelDoc = doc(this.firestore, `hotels/${hotelId}`);
-    await updateDoc(hotelDoc, { unavailableDates: dates });
+    const hotelDoc = this.inContext(() => doc(this.firestore, `hotels/${hotelId}`));
+    await this.inContext(() => updateDoc(hotelDoc, { unavailableDates: dates }));
   }
 }

@@ -9,8 +9,9 @@ import { ToastService } from '../../../shared/toast/toast.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
-      <h3 class="text-2xl font-bold text-slate-800 mb-6">Add New Hotel</h3>
+    <div class="rounded-3xl border border-slate-100 bg-white p-8 shadow-xl shadow-cyan-100/35">
+      <h3 class="mb-1 text-3xl font-black text-slate-800">Add New Hotel</h3>
+      <p class="mb-6 text-sm text-slate-500">List a property with complete details for quick bookings.</p>
       
       <form [formGroup]="hotelForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -50,7 +51,7 @@ import { ToastService } from '../../../shared/toast/toast.service';
 
         <div class="md:col-span-2 flex justify-end">
           <button type="submit" [disabled]="hotelForm.invalid || isLoading" 
-                  class="btn-primary px-10 flex items-center gap-2">
+                  class="btn-primary flex items-center gap-2 px-10 py-3">
             <span *ngIf="isLoading" class="animate-spin border-2 border-white/30 border-t-white rounded-full h-4 w-4"></span>
             Add Hotel
           </button>
@@ -59,8 +60,8 @@ import { ToastService } from '../../../shared/toast/toast.service';
     </div>
   `,
   styles: [`
-    .label { @apply block text-sm font-semibold text-slate-700 mb-1; }
-    .error { @apply text-red-500 text-xs mt-1; }
+    .label { @apply mb-1 block text-sm font-semibold text-slate-700; }
+    .error { @apply mt-1 text-xs text-red-500; }
   `]
 })
 export class AddHotelComponent {
