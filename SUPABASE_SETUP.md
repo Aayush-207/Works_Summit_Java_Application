@@ -1,53 +1,224 @@
-# Supabase Migration Guide
+# Supabase Setup Guide - Hotel Booking App
 
-## Setup Instructions
+Complete setup guide to configure Supabase for the Hotel Booking App with database tables and storage policies.
 
-### 1. Create Supabase Project
-1. Go to [https://app.supabase.com](https://app.supabase.com)
-2. Sign up or log in
-3. Click "New Project"
-4. Fill in project details and create
-5. Wait for project to initialize
+## Step 1: Create Database Tables
 
-### 2. Get Supabase Credentials
-1. Go to Project Settings (gear icon)
-2. Click "API" in the left sidebar
-3. Copy:
-   - **Project URL** (under URL section)
-   - **Anon Public Key** (under "Project API keys")
+Go to **Supabase Dashboard** → **SQL Editor** → **New Query** and run the following SQL scripts:
 
-### 3. Update Environment Configuration
-1. Open `web-app/src/environments/environment.ts`
-2. Replace `YOUR_PROJECT_URL` with your Supabase URL
-3. Replace `YOUR_ANON_KEY` with your Anon Public Key
-
-### 4. Create Database Tables
-
-Run these SQL commands in Supabase SQL Editor (Project Dashboard > SQL Editor):
+### 1.1 Create Hotels Table
 
 ```sql
--- Create hotels table
-CREATE TABLE hotels (
-  id BIGSERIAL PRIMARY KEY,
+-- Create hotels table with UUID primary key
+CREATE TABLE IF NOT EXISTS public.hotels (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
+  location VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
   price_per_night DECIMAL(10, 2) NOT NULL,
   image_url TEXT,
-  location VARCHAR(255) NOT NULL,
   unavailable_dates TEXT[] DEFAULT '{}',
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create index on created_at for faster queries
+CREATE INDEX IF NOT EXISTS idx_hotels_created_at ON public.hotels(created_at DESC);
+
+-- Enable RLS for public read access
+ALTER TABLE public.hotels ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access"
+ON public.hotels
+FOR SELECT
+TO PUBLIC
+USING (true);
+
+CREATE POLICY "Allow public insert"
+ON public.hotels
+FOR INSERT
+TO PUBLIC
+WITH CHECK (true);
+
+CREATE POLICY "Allow public update"
+ON public.hotels
+FOR UPDATE
+TO PUBLIC
+USING (true)
+WITH CHECK (true);
+
+-- Grant permissions to anon role
+GRANT SELECT, INSERT, UPDATE ON public.hotels TO anon;
+```
+
+**Run this in SQL Editor**
+
+### 1.2 Create Bookings Table
+
+```sql
 -- Create bookings table
-CREATE TABLE bookings (
-  id BIGSERIAL PRIMARY KEY,
-  hotel_id BIGINT NOT NULL REFERENCES hotels(id),
-  hotel_name VARCHAR(255),
-  reserved_date DATE NOT NULL,
+CREATE TABLE IF NOT EXISTS public.bookings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  hotel_id UUID NOT NULL REFERENCES public.hotels(id) ON DELETE CASCADE,
   reserved_for_user VARCHAR(255) NOT NULL,
+  reserved_date DATE NOT NULL,
   amount_paid DECIMAL(10, 2) NOT NULL,
-  booked_at TIMESTAMP DEFAULT NOW()
+  booked_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Create indexes for faster queries
+CREATE INDEX IF NOT EXISTS idx_bookings_hotel_id ON public.bookings(hotel_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_booked_at ON public.bookings(booked_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bookings_reserved_date ON public.bookings(reserved_date);
+
+-- Enable RLS with public access
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read"
+ON public.bookings
+FOR SELECT
+TO PUBLIC
+USING (true);
+
+CREATE POLICY "Allow public insert"
+ON public.bookings
+FOR INSERT
+TO PUBLIC
+WITH CHECK (true);
+
+CREATE POLICY "Allow public update"
+ON public.bookings
+FOR UPDATE
+TO PUBLIC
+USING (true)
+WITH CHECK (true);
+
+-- Grant permissions to anon role
+GRANT SELECT, INSERT, UPDATE ON public.bookings TO anon;
+```
+
+**Run this in SQL Editor**
+
+## Step 2: Configure Storage Bucket RLS Policies
+
+### 2.1 Ensure Bucket is Public
+
+1. Go to **Supabase Dashboard** → **Storage** → **Buckets**
+2. Click on **hotel-images** bucket
+3. Click **Settings** (gear icon)
+4. Toggle **Make bucket public** to **ON**
+5. Click **Save**
+
+### 2.2 Add Storage RLS Policies (IMPORTANT!)
+
+Go to **Storage** → **Policies** and create these policies for `hotel-images` bucket:
+
+#### Policy 1: Allow Anonymous Upload
+
+1. Click **+ New Policy**
+2. Select **For custom expressions**
+3. Choose:
+   - **Allowed operation**: `INSERT`
+   - **Target role**: `anon` (or leave blank for public)
+4. In **Expression** field, paste:
+   ```
+   bucket_id = 'hotel-images'
+   ```
+5. Click **Review** → **Save policy**
+
+#### Policy 2: Allow Anonymous Download/Read
+
+1. Click **+ New Policy**
+2. Select **For custom expressions**
+3. Choose:
+   - **Allowed operation**: `SELECT`
+   - **Target role**: `anon`
+4. In **Expression** field, paste:
+   ```
+   bucket_id = 'hotel-images'
+   ```
+5. Click **Review** → **Save policy**
+
+#### Policy 3: Allow Anonymous Delete
+
+1. Click **+ New Policy**
+2. Select **For custom expressions**
+3. Choose:
+   - **Allowed operation**: `DELETE`
+   - **Target role**: `anon`
+4. In **Expression** field, paste:
+   ```
+   bucket_id = 'hotel-images'
+   ```
+5. Click **Review** → **Save policy**
+
+## Step 3: Verify Configuration
+
+### 3.1 Test Database Access
+Open browser console (F12) and check:
+- ✅ No "Could not find the table 'public.hotels'" error
+- ✅ Admin dashboard loads without errors
+- ✅ Hotel list appears (if you have seed data)
+
+### 3.2 Test Storage Upload
+1. Go to **Admin Dashboard** → **Add Hotel** section
+2. Select a hotel image
+3. Fill in hotel details:
+   - Name: "Test Hotel"
+   - Location: "Test City"
+   - Price: "5000"
+   - Description: "Test hotel description for testing purposes"
+4. Click **Add Hotel**
+5. ✅ Success modal should appear (green checkmark)
+6. ✅ No "row-level security policy" error
+
+## Current Environment Configuration
+
+Your app is configured with:
+```
+Supabase URL: https://yytgzdqkautnpfqxfomj.supabase.co
+Storage Bucket: hotel-images
+Database: PostgreSQL (public schema)
+```
+
+Location: `web-app/src/environments/environment.ts`
+
+## Troubleshooting
+
+| Error | Solution |
+|-------|----------|
+| `"Could not find the table 'public.hotels'"` | Run SQL script 1.1 in Supabase SQL Editor |
+| `"Could not find the table 'public.bookings'"` | Run SQL script 1.2 in Supabase SQL Editor |
+| `"Upload failed: new row violates row-level security policy"` | Add storage RLS policies (Step 2.2) |
+| `"bucket_id" does not exist` in storage policy | Make sure bucket name is exactly `hotel-images` (lowercase) |
+| Images not displaying after upload | Ensure bucket is set to Public (Step 2.1) |
+| 404 Not Found on hotel list | Check database connection and table permissions |
+
+## Quick Setup Checklist
+
+- [ ] ✅ Created `hotels` table with SQL script 1.1
+- [ ] ✅ Created `bookings` table with SQL script 1.2
+- [ ] ✅ Made `hotel-images` storage bucket public
+- [ ] ✅ Added storage RLS policies (3 policies for INSERT, SELECT, DELETE)
+- [ ] ✅ App running at `http://localhost:4200`
+- [ ] ✅ Auth service running at `http://localhost:8081`
+- [ ] ✅ No console errors when loading admin dashboard
+- [ ] ✅ Successfully added a hotel with image upload
+
+## Reference
+
+**SQL Editor Access:**
+1. Supabase Dashboard → Your Project
+2. Left sidebar → **SQL Editor**
+3. Click **New Query**
+4. Paste SQL script
+5. Click **RUN** (Ctrl+Enter)
+
+**Storage Policies Access:**
+1. Supabase Dashboard → Your Project
+2. Left sidebar → **Storage**
+3. Click **Policies** tab (or gear icon on bucket)
 
 -- Create storage bucket for hotel images
 -- (Do this in Storage section, create bucket named "hotel-images")

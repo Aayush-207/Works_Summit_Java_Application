@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HotelService } from '../../../core/services/hotel.service';
@@ -36,8 +36,14 @@ import { ToastService } from '../../../shared/toast/toast.service';
               <button type="button" (click)="removeImage()" class="remove-image-btn">✕ Remove</button>
             </div>
 
+            <!-- Loading state -->
+            <div *ngIf="imageLoading && !imagePreview" class="image-loading-state">
+              <div class="loading-spinner"></div>
+              <p class="loading-text">Processing image...</p>
+            </div>
+
             <!-- Upload prompt if no image -->
-            <div *ngIf="!imagePreview" (click)="imageInput.click()" class="image-upload-prompt">
+            <div *ngIf="!imagePreview && !imageLoading" (click)="imageInput.click()" class="image-upload-prompt">
               <div class="upload-icon">📸</div>
               <p class="upload-text">Click to upload or drag and drop</p>
               <p class="upload-subtext">PNG, JPG, GIF up to 5MB</p>
@@ -83,6 +89,17 @@ import { ToastService } from '../../../shared/toast/toast.service';
           </button>
         </div>
       </form>
+    </div>
+
+    <!-- Success Modal -->
+    <div *ngIf="showSuccessModal" class="modal-overlay" (click)="closeSuccessModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-icon">✅</div>
+        <h3 class="modal-title">Success!</h3>
+        <p class="modal-message">Hotel added successfully</p>
+        <p class="modal-submessage">Your hotel is now live and visible to users</p>
+        <button (click)="closeSuccessModal()" class="modal-button">Got it</button>
+      </div>
     </div>
   `,
   styles: [`
@@ -224,6 +241,34 @@ import { ToastService } from '../../../shared/toast/toast.service';
       transform: scale(1.05);
     }
 
+    .image-loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2.5rem 2rem;
+      border: 2px dashed rgba(6, 182, 212, 0.3);
+      border-radius: 1rem;
+      background: rgba(240, 249, 255, 0.3);
+    }
+
+    .loading-spinner {
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid rgba(6, 182, 212, 0.2);
+      border-top-color: #06b6d4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+      font-size: 0.9rem;
+      color: #0891b2;
+      font-weight: 600;
+      margin: 0;
+    }
+
     .image-upload-prompt {
       display: flex;
       flex-direction: column;
@@ -308,6 +353,91 @@ import { ToastService } from '../../../shared/toast/toast.service';
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 2.5rem 2rem;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      animation: slideUp 0.3s ease;
+    }
+
+    .modal-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-title {
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: #1e293b;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .modal-message {
+      font-size: 1rem;
+      color: #475569;
+      margin: 0 0 0.25rem 0;
+      font-weight: 600;
+    }
+
+    .modal-submessage {
+      font-size: 0.875rem;
+      color: #94a3b8;
+      margin: 0 0 1.5rem 0;
+    }
+
+    .modal-button {
+      padding: 0.75rem 2rem;
+      border-radius: 0.75rem;
+      border: none;
+      background: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .modal-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px rgba(6, 182, 212, 0.3);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   `]
 })
 export class AddHotelComponent {
@@ -315,6 +445,8 @@ export class AddHotelComponent {
   private hotelService = inject(HotelService);
   private imageUploadService = inject(ImageUploadService);
   private toastService = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   hotelForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
@@ -328,6 +460,8 @@ export class AddHotelComponent {
   imagePreview: string | null = null;
   selectedFile: File | null = null;
   imageError = '';
+  imageLoading = false;
+  showSuccessModal = false;
 
   get f() { return this.hotelForm.controls; }
 
@@ -341,20 +475,36 @@ export class AddHotelComponent {
     // Validate file size (5MB max)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      this.imageError = 'File size must be less than 5MB';
+      this.ngZone.run(() => {
+        this.imageError = 'File size must be less than 5MB';
+        this.cdr.markForCheck();
+      });
       return;
     }
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      this.imageError = 'Please select a valid image file';
+      this.ngZone.run(() => {
+        this.imageError = 'Please select a valid image file';
+        this.cdr.markForCheck();
+      });
       return;
     }
 
-    // Create preview
+    // Set loading state
+    this.ngZone.run(() => {
+      this.imageLoading = true;
+      this.cdr.markForCheck();
+    });
+
+    // Create preview asynchronously
     const reader = new FileReader();
     reader.onload = (e) => {
-      this.imagePreview = e.target?.result as string;
+      this.ngZone.run(() => {
+        this.imagePreview = e.target?.result as string;
+        this.imageLoading = false;
+        this.cdr.markForCheck();
+      });
     };
     reader.readAsDataURL(file);
 
@@ -362,15 +512,27 @@ export class AddHotelComponent {
   }
 
   removeImage(): void {
-    this.imagePreview = null;
-    this.selectedFile = null;
-    this.imageError = '';
+    this.ngZone.run(() => {
+      this.imagePreview = null;
+      this.selectedFile = null;
+      this.imageError = '';
+      this.cdr.markForCheck();
+    });
+  }
+
+  closeSuccessModal(): void {
+    this.ngZone.run(() => {
+      this.showSuccessModal = false;
+      this.cdr.markForCheck();
+    });
   }
 
   async onSubmit() {
     if (this.hotelForm.invalid || !this.selectedFile) return;
 
     this.isLoading = true;
+    this.cdr.markForCheck();
+
     try {
       const formValue = this.hotelForm.value;
       
@@ -394,14 +556,30 @@ export class AddHotelComponent {
         unavailableDates: unavailableDates
       });
 
-      this.toastService.show('Hotel added successfully!', 'success');
-      this.hotelForm.reset();
-      this.removeImage();
+      this.ngZone.run(() => {
+        this.showSuccessModal = true;
+        this.hotelForm.reset();
+        this.removeImage();
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      });
     } catch (err) {
       console.error('Error adding hotel:', err);
-      this.toastService.show('Failed to add hotel. Please try again.', 'error');
-    } finally {
-      this.isLoading = false;
+      this.ngZone.run(() => {
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      });
+      
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      if (errorMsg.includes('Bucket not found')) {
+        this.toastService.show('⚠️ Storage bucket not configured. See SUPABASE_SETUP.md step 2.1', 'error');
+      } else if (errorMsg.includes('row-level security')) {
+        this.toastService.show('⚠️ Storage security policy blocked upload. See SUPABASE_SETUP.md step 2.2', 'error');
+      } else if (errorMsg.includes('Could not find the table')) {
+        this.toastService.show('⚠️ Database tables not created. See SUPABASE_SETUP.md step 1', 'error');
+      } else {
+        this.toastService.show('❌ Error: ' + errorMsg, 'error');
+      }
     }
   }
 }

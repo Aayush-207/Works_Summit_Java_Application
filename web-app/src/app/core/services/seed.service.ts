@@ -20,7 +20,14 @@ export class SeedService {
         .select('id')
         .limit(1);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('Could not find the table')) {
+          console.warn('Hotels table not found. Please run SUPABASE_SETUP.md step 1.1 to create it.');
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       // Only seed if table is empty
       if (!data || data.length === 0) {
@@ -38,10 +45,20 @@ export class SeedService {
           .from(this.TABLE_NAME)
           .insert(hotelRecords);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          if (insertError.message.includes('Could not find the table')) {
+            console.warn('Hotels table not found. Please run SUPABASE_SETUP.md step 1.1 to create it.');
+          } else {
+            throw insertError;
+          }
+          return;
+        }
 
         localStorage.setItem('supabase_seeded', 'true');
-        console.log('Seed data successfully added to Supabase');
+        console.log('✅ Seed data successfully added to Supabase');
+      } else {
+        console.log('✅ Supabase already contains hotel data');
+        localStorage.setItem('supabase_seeded', 'true');
       }
     } catch (error) {
       console.error('Seed error:', error);

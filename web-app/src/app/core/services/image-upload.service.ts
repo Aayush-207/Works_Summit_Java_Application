@@ -20,6 +20,13 @@ export class ImageUploadService {
         .upload(filePath, file);
 
       if (error) {
+        // Provide specific error messages
+        if (error.message.includes('row-level security')) {
+          throw new Error('Upload blocked by security policy. Please check SUPABASE_SETUP.md step 2.2');
+        }
+        if (error.message.includes('Bucket not found')) {
+          throw new Error('Storage bucket not found. Please check SUPABASE_SETUP.md step 2.1');
+        }
         throw new Error(`Upload failed: ${error.message}`);
       }
 
@@ -28,6 +35,7 @@ export class ImageUploadService {
         .from(this.BUCKET_NAME)
         .getPublicUrl(data.path);
 
+      console.log('Image uploaded successfully:', publicUrlData.publicUrl);
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error('Image upload error:', error);

@@ -22,7 +22,12 @@ export class BookingService {
         .order('booked_at', { ascending: false })
     ).pipe(
       map(result => {
-        if (result.error) throw result.error;
+        if (result.error) {
+          if (result.error.message.includes('Could not find the table')) {
+            console.error('Database table not found. Run SUPABASE_SETUP.md step 1.2');
+          }
+          throw result.error;
+        }
         return result.data.map(booking => ({
           id: booking.id,
           hotelId: booking.hotel_id,
@@ -50,7 +55,12 @@ export class BookingService {
           booked_at: new Date().toISOString()
         });
 
-      if (bookingError) throw bookingError;
+      if (bookingError) {
+        if (bookingError.message.includes('Could not find the table')) {
+          throw new Error('Bookings table not found. Run SUPABASE_SETUP.md step 1.2');
+        }
+        throw bookingError;
+      }
 
       // 2. Update the hotel's unavailable dates
       const { data: hotelData, error: fetchError } = await this.supabase
@@ -59,7 +69,12 @@ export class BookingService {
         .eq('id', booking.hotelId)
         .single();
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        if (fetchError.message.includes('Could not find the table')) {
+          throw new Error('Hotels table not found. Run SUPABASE_SETUP.md step 1.1');
+        }
+        throw fetchError;
+      }
 
       const currentUnavailable = hotelData?.unavailable_dates || [];
       if (!currentUnavailable.includes(booking.reservedDate)) {

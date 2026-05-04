@@ -20,7 +20,12 @@ export class HotelService {
         .order('created_at', { ascending: false })
     ).pipe(
       map(result => {
-        if (result.error) throw result.error;
+        if (result.error) {
+          if (result.error.message.includes('Could not find the table')) {
+            console.error('Database table not found. Run SUPABASE_SETUP.md step 1.1');
+          }
+          throw result.error;
+        }
         return result.data.map(hotel => ({
           id: hotel.id,
           name: hotel.name,
@@ -36,36 +41,66 @@ export class HotelService {
   }
 
   async addHotel(hotel: Hotel): Promise<void> {
-    const { error } = await this.supabase
-      .from(this.TABLE_NAME)
-      .insert({
-        name: hotel.name,
-        description: hotel.description,
-        price_per_night: hotel.pricePerNight,
-        image_url: hotel.imageUrl,
-        location: hotel.location,
-        unavailable_dates: hotel.unavailableDates || [],
-        created_at: new Date().toISOString()
-      });
+    try {
+      const { error } = await this.supabase
+        .from(this.TABLE_NAME)
+        .insert({
+          name: hotel.name,
+          description: hotel.description,
+          price_per_night: hotel.pricePerNight,
+          image_url: hotel.imageUrl,
+          location: hotel.location,
+          unavailable_dates: hotel.unavailableDates || [],
+          created_at: new Date().toISOString()
+        });
 
-    if (error) throw error;
+      if (error) {
+        if (error.message.includes('Could not find the table')) {
+          throw new Error('Hotels table not found. Run SUPABASE_SETUP.md step 1.1');
+        }
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error adding hotel:', error);
+      throw error;
+    }
   }
 
   async updateHotelUnavailableDates(hotelId: string, dates: string[]): Promise<void> {
-    const { error } = await this.supabase
-      .from(this.TABLE_NAME)
-      .update({ unavailable_dates: dates })
-      .eq('id', hotelId);
+    try {
+      const { error } = await this.supabase
+        .from(this.TABLE_NAME)
+        .update({ unavailable_dates: dates })
+        .eq('id', hotelId);
 
-    if (error) throw error;
+      if (error) {
+        if (error.message.includes('Could not find the table')) {
+          throw new Error('Hotels table not found. Run SUPABASE_SETUP.md step 1.1');
+        }
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error updating hotel dates:', error);
+      throw error;
+    }
   }
 
   async deleteHotel(hotelId: string): Promise<void> {
-    const { error } = await this.supabase
-      .from(this.TABLE_NAME)
-      .delete()
-      .eq('id', hotelId);
+    try {
+      const { error } = await this.supabase
+        .from(this.TABLE_NAME)
+        .delete()
+        .eq('id', hotelId);
 
-    if (error) throw error;
+      if (error) {
+        if (error.message.includes('Could not find the table')) {
+          throw new Error('Hotels table not found. Run SUPABASE_SETUP.md step 1.1');
+        }
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error deleting hotel:', error);
+      throw error;
+    }
   }
 }
