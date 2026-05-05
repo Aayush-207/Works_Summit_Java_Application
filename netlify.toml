@@ -1,10 +1,10 @@
 # Netlify Configuration for Angular SPA
 
 [build]
+  base = "web-app"
   command = "npm ci; npm run build"
   publish = "dist/web-app"
 
-# Redirect all non-file requests to index.html for Angular routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
