@@ -3,7 +3,7 @@
 [build]
   base = "web-app"
   command = "npm ci; npm run build"
-  publish = "dist/web-app"
+  publish = "dist/web-app/browser"
 
 [[redirects]]
   from = "/*"
