@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { BookingService } from '../../core/services/booking.service';
 import { HotelService } from '../../core/services/hotel.service';
@@ -102,8 +102,12 @@ import { Hotel } from '../../core/models/hotel.model';
                   <p class="hotel-desc">{{ hotel.description | slice:0:80 }}...</p>
                 </div>
                 <div class="hotel-actions">
-                  <button class="delete-btn" (click)="deleteHotel(hotel.id!)">
-                    🗑️ Delete
+                  <button class="delete-btn" 
+                    (click)="deleteHotel(hotel.id!)"
+                    [disabled]="isDeleting()">
+                    <span *ngIf="!isDeleting()">🗑️ Delete</span>
+                    <span *ngIf="isDeleting()" class="spinner"></span>
+                    {{ isDeleting() ? 'Deleting...' : '' }}
                   </button>
                 </div>
               </div>
@@ -119,6 +123,18 @@ import { Hotel } from '../../core/models/hotel.model';
         </div>
       </section>
     </main>
+
+    <!-- Deletion Success Modal -->
+    <div *ngIf="showDeleteSuccess()" class="modal-overlay" (click)="closeDeleteSuccess()">
+      <div class="success-modal" (click)="$event.stopPropagation()">
+        <div class="modal-content">
+          <div class="checkmark">✓</div>
+          <h2>Hotel Deleted Successfully</h2>
+          <p><strong>{{ deletedHotelName }}</strong> has been removed from your inventory.</p>
+          <button (click)="closeDeleteSuccess()" class="modal-button">Continue</button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     .main-container {
@@ -526,15 +542,131 @@ import { Hotel } from '../../core/models/hotel.model';
       font-size: 0.875rem;
       cursor: pointer;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
 
-    .delete-btn:hover {
+    .delete-btn:hover:not(:disabled) {
       background: #fecaca;
       transform: translateY(-2px);
     }
 
-    .delete-btn:active {
+    .delete-btn:active:not(:disabled) {
       transform: translateY(0);
+    }
+
+    .delete-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(220, 38, 38, 0.3);
+      border-top-color: #dc2626;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Success Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .success-modal {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 2rem;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      animation: scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+
+    .modal-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .checkmark {
+      width: 4rem;
+      height: 4rem;
+      margin: 0 auto 1rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2rem;
+      animation: scaleIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s forwards;
+      opacity: 0;
+    }
+
+    .success-modal h2 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #1e293b;
+      margin: 0.5rem 0;
+    }
+
+    .success-modal p {
+      color: #64748b;
+      margin: 0.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .modal-button {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      border: none;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 1rem;
+    }
+
+    .modal-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
   `]
 })
@@ -545,17 +677,43 @@ export class AdminDashboardComponent {
   bookings$: Observable<Booking[]> = this.bookingService.getBookings();
   hotels$: Observable<Hotel[]> = this.hotelService.getHotels();
 
+  isDeleting = signal(false);
+  showDeleteSuccess = signal(false);
+  deletedHotelName = signal('');
+
   async deleteHotel(hotelId: string) {
-    if (confirm('Are you sure you want to delete this hotel? This action cannot be undone.')) {
-      try {
-        await this.hotelService.deleteHotel(hotelId);
-        // Refresh hotels list
-        this.hotels$ = this.hotelService.getHotels();
-      } catch (error) {
-        console.error('Failed to delete hotel:', error);
-        alert('Failed to delete hotel. Please try again.');
-      }
+    if (!confirm('Are you sure you want to delete this hotel? This action cannot be undone.')) {
+      return;
     }
+
+    this.isDeleting.set(true);
+    try {
+      // Find hotel name before deletion
+      const hotels = await this.hotelService.getHotels().toPromise();
+      const hotel = hotels?.find(h => h.id === hotelId);
+      this.deletedHotelName.set(hotel?.name || 'Hotel');
+
+      await this.hotelService.deleteHotel(hotelId);
+      
+      // Refresh hotels list
+      this.hotels$ = this.hotelService.getHotels();
+
+      // Show success modal
+      this.showDeleteSuccess.set(true);
+      setTimeout(() => {
+        this.showDeleteSuccess.set(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Failed to delete hotel:', error);
+      alert('Failed to delete hotel. Please try again.');
+      this.isDeleting.set(false);
+    } finally {
+      this.isDeleting.set(false);
+    }
+  }
+
+  closeDeleteSuccess() {
+    this.showDeleteSuccess.set(false);
   }
 
   onHotelAdded() {
