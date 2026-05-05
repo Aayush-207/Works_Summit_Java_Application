@@ -34,47 +34,107 @@ import { AuthService } from '../../core/services/auth.service';
         </aside>
 
         <div class="auth-card glass-card">
-          <div class="auth-header">
-            <div class="logo-mark">H</div>
-            <h2>Welcome Back</h2>
-            <p>Sign in to continue to HotelBook</p>
-          </div>
-
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-            <div class="field-group">
-              <label>Username</label>
-              <input type="text" formControlName="username" class="field-input" placeholder="Enter your username">
-              <div *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.invalid" class="field-error">Username is required</div>
+          <!-- LOGIN FORM -->
+          <ng-container *ngIf="!isSignup">
+            <div class="auth-header">
+              <div class="logo-mark">H</div>
+              <h2>Welcome Back</h2>
+              <p>Sign in to continue to HotelBook</p>
             </div>
 
-            <div class="field-group">
-              <label>Password</label>
-              <div class="password-wrap">
-                <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="field-input field-input--password" placeholder="Enter password">
-                <button type="button" (click)="showPassword = !showPassword" class="password-toggle">
-                  {{ showPassword ? 'Hide' : 'Show' }}
-                </button>
+            <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="login-form">
+              <div class="field-group">
+                <label>Username</label>
+                <input type="text" formControlName="username" class="field-input" placeholder="Enter your username">
+                <div *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.invalid" class="field-error">Username is required</div>
               </div>
-              <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="field-error">Password is required</div>
+
+              <div class="field-group">
+                <label>Password</label>
+                <div class="password-wrap">
+                  <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="field-input field-input--password" placeholder="Enter password">
+                  <button type="button" (click)="showPassword = !showPassword" class="password-toggle">
+                    {{ showPassword ? 'Hide' : 'Show' }}
+                  </button>
+                </div>
+                <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="field-error">Password is required</div>
+              </div>
+
+              <div *ngIf="errorMessage" class="error-banner">
+                {{ errorMessage }}
+              </div>
+
+              <button type="submit" [disabled]="loginForm.invalid || isLoading" class="submit-button">
+                <span *ngIf="isLoading" class="spinner"></span>
+                {{ isLoading ? 'Authenticating...' : 'Login' }}
+              </button>
+            </form>
+
+            <div class="auth-footer">
+              <p>Don't have an account? <button type="button" (click)="toggleMode()" class="toggle-link">Sign up here</button></p>
             </div>
 
-            <div *ngIf="errorMessage" class="error-banner">
-              {{ errorMessage }}
+            <div class="demo-panel">
+              <p class="demo-title">Demo Credentials</p>
+              <div class="demo-grid">
+                <div class="demo-chip"><strong>Admin:</strong> admin / admin123</div>
+                <div class="demo-chip"><strong>User:</strong> user / user123</div>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- SIGNUP FORM -->
+          <ng-container *ngIf="isSignup">
+            <div class="auth-header">
+              <div class="logo-mark">+</div>
+              <h2>Create Account</h2>
+              <p>Join HotelBook today</p>
             </div>
 
-            <button type="submit" [disabled]="loginForm.invalid || isLoading" class="submit-button">
-              <span *ngIf="isLoading" class="spinner"></span>
-              {{ isLoading ? 'Authenticating...' : 'Login' }}
-            </button>
-          </form>
+            <form [formGroup]="signupForm" (ngSubmit)="onSignup()" class="login-form">
+              <div class="field-group">
+                <label>Username</label>
+                <input type="text" formControlName="username" class="field-input" placeholder="Choose a username">
+                <div *ngIf="signupForm.get('username')?.touched && signupForm.get('username')?.invalid" class="field-error">
+                  <span *ngIf="signupForm.get('username')?.errors?.['required']">Username is required</span>
+                  <span *ngIf="signupForm.get('username')?.errors?.['minlength']">Username must be at least 3 characters</span>
+                </div>
+              </div>
 
-          <div class="demo-panel">
-            <p class="demo-title">Demo Credentials</p>
-            <div class="demo-grid">
-              <div class="demo-chip"><strong>Admin:</strong> admin / admin123</div>
-              <div class="demo-chip"><strong>User:</strong> user / user123</div>
+              <div class="field-group">
+                <label>Email</label>
+                <input type="email" formControlName="email" class="field-input" placeholder="Enter your email">
+                <div *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.invalid" class="field-error">Valid email is required</div>
+              </div>
+
+              <div class="field-group">
+                <label>Password</label>
+                <div class="password-wrap">
+                  <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="field-input field-input--password" placeholder="Create a strong password">
+                  <button type="button" (click)="showPassword = !showPassword" class="password-toggle">
+                    {{ showPassword ? 'Hide' : 'Show' }}
+                  </button>
+                </div>
+                <div *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.invalid" class="field-error">
+                  <span *ngIf="signupForm.get('password')?.errors?.['required']">Password is required</span>
+                  <span *ngIf="signupForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</span>
+                </div>
+              </div>
+
+              <div *ngIf="errorMessage" class="error-banner">
+                {{ errorMessage }}
+              </div>
+
+              <button type="submit" [disabled]="signupForm.invalid || isLoading" class="submit-button">
+                <span *ngIf="isLoading" class="spinner"></span>
+                {{ isLoading ? 'Creating Account...' : 'Sign Up' }}
+              </button>
+            </form>
+
+            <div class="auth-footer">
+              <p>Already have an account? <button type="button" (click)="toggleMode()" class="toggle-link">Login here</button></p>
             </div>
-          </div>
+          </ng-container>
         </div>
       </div>
     </section>
@@ -397,6 +457,33 @@ import { AuthService } from '../../core/services/auth.service';
       color: #0f172a;
     }
 
+    .auth-footer {
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .auth-footer p {
+      margin: 0;
+    }
+
+    .toggle-link {
+      background: none;
+      border: none;
+      color: #06b6d4;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    .toggle-link:hover {
+      text-decoration: underline;
+    }
+
     @keyframes spin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
@@ -437,34 +524,89 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
+  isSignup = false;
+  showPassword = false;
+  isLoading = false;
+  errorMessage = '';
+
   loginForm = this.fb.group({
     username: ['', Validators.required],
     password: ['', Validators.required]
   });
 
-  isLoading = false;
-  errorMessage = '';
-  showPassword = false;
+  signupForm = this.fb.group({
+    username: ['', [Validators.required, Validators.minLength(3)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]]
+  });
 
-  onSubmit() {
-    if (this.loginForm.valid) {
-      this.isLoading = true;
-      this.errorMessage = '';
-      
-      this.authService.login(this.loginForm.value as any).subscribe({
-        next: (res) => {
-          this.isLoading = false;
-          if (res.role === 'ADMIN') {
-            this.router.navigate(['/admin-dashboard']);
-          } else {
-            this.router.navigate(['/user-dashboard']);
-          }
-        },
-        error: () => {
-          this.isLoading = false;
-          this.errorMessage = 'Invalid username or password. Please try again.';
+  toggleMode(): void {
+    this.isSignup = !this.isSignup;
+    this.errorMessage = '';
+    this.loginForm.reset();
+    this.signupForm.reset();
+  }
+
+  onLogin(): void {
+    if (this.loginForm.invalid) return;
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    const credentials = {
+      username: this.loginForm.value.username || '',
+      password: this.loginForm.value.password || ''
+    };
+
+    this.authService.login(credentials).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        const role = this.authService.getRole();
+        if (role === 'ADMIN') {
+          this.router.navigate(['/admin-dashboard']);
+        } else {
+          this.router.navigate(['/user-dashboard']);
         }
-      });
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error.error?.message || 'Invalid username or password';
+      }
+    });
+  }
+
+  onSignup(): void {
+    if (this.signupForm.invalid) return;
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    const request = {
+      username: this.signupForm.value.username || '',
+      email: this.signupForm.value.email || '',
+      password: this.signupForm.value.password || ''
+    };
+
+    this.authService.register(request).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.errorMessage = '';
+        this.isSignup = false;
+        alert('Account created successfully! Please login with your credentials.');
+        this.loginForm.patchValue({ username: request.username });
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error.error?.username || 'Registration failed. Please try again.';
+      }
+    });
+  }
+
+  onSubmit(): void {
+    if (this.isSignup) {
+      this.onSignup();
+    } else {
+      this.onLogin();
     }
   }
 }

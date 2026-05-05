@@ -1,9 +1,15 @@
 com\hotelbooking\authservice\controller\AuthController.class
+com\hotelbooking\authservice\exception\GlobalExceptionHandler.class
+com\hotelbooking\authservice\service\UserService$3.class
+com\hotelbooking\authservice\service\UserService$1.class
+com\hotelbooking\authservice\security\SecurityConfig.class
 com\hotelbooking\authservice\service\UserDetailsServiceImpl.class
 com\hotelbooking\authservice\dto\AuthResponse.class
 com\hotelbooking\authservice\dto\LoginRequest.class
 com\hotelbooking\authservice\AuthServiceApplication.class
-com\hotelbooking\authservice\exception\GlobalExceptionHandler.class
+com\hotelbooking\authservice\security\SupabaseUserDetailsService.class
+com\hotelbooking\authservice\dto\RegisterRequest.class
 com\hotelbooking\authservice\util\JwtUtil.class
+com\hotelbooking\authservice\service\UserService.class
 com\hotelbooking\authservice\security\JwtAuthenticationFilter.class
-com\hotelbooking\authservice\security\SecurityConfig.class
+com\hotelbooking\authservice\service\UserService$2.class

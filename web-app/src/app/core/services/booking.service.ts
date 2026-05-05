@@ -18,7 +18,7 @@ export class BookingService {
     return from(
       this.supabase
         .from(this.BOOKINGS_TABLE)
-        .select('*')
+        .select('*, hotels:hotel_id(name)')
         .order('booked_at', { ascending: false })
     ).pipe(
       map(result => {
@@ -31,7 +31,7 @@ export class BookingService {
         return result.data.map(booking => ({
           id: booking.id,
           hotelId: booking.hotel_id,
-          hotelName: booking.hotel_name,
+          hotelName: booking.hotels?.name || booking.hotel_name || 'Unknown Hotel',
           reservedDate: booking.reserved_date,
           reservedForUser: booking.reserved_for_user,
           amountPaid: booking.amount_paid,
@@ -48,7 +48,6 @@ export class BookingService {
         .from(this.BOOKINGS_TABLE)
         .insert({
           hotel_id: booking.hotelId,
-          hotel_name: booking.hotelName,
           reserved_date: booking.reservedDate,
           reserved_for_user: booking.reservedForUser,
           amount_paid: booking.amountPaid,

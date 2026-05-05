@@ -2,6 +2,8 @@ package com.hotelbooking.authservice.controller;
 
 import com.hotelbooking.authservice.dto.AuthResponse;
 import com.hotelbooking.authservice.dto.LoginRequest;
+import com.hotelbooking.authservice.dto.RegisterRequest;
+import com.hotelbooking.authservice.service.UserService;
 import com.hotelbooking.authservice.util.JwtUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,9 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @Autowired
+    private UserService userService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
@@ -46,6 +51,16 @@ public class AuthController {
             return ResponseEntity.ok(new AuthResponse(token, role, userDetails.getUsername()));
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Invalid username or password");
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        try {
+            userService.registerUser(registerRequest);
+            return ResponseEntity.ok(new AuthResponse(null, "USER", registerRequest.getUsername()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new AuthResponse(null, null, e.getMessage()));
         }
     }
 }

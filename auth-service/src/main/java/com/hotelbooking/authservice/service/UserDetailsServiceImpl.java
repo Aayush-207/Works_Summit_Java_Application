@@ -1,18 +1,16 @@
 package com.hotelbooking.authservice.service;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+// Note: Use SupabaseUserDetailsService instead. This class is kept for reference only.
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final Map<String, UserDetails> users = new HashMap<>();
@@ -38,10 +36,5 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("User not found");
         }
         return user;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return passwordEncoder;
     }
 }

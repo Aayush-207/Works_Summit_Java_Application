@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, NgZone, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HotelService } from '../../../core/services/hotel.service';
@@ -448,6 +448,8 @@ export class AddHotelComponent {
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
 
+  @Output() hotelAdded = new EventEmitter<void>();
+
   hotelForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
     location: ['', Validators.required],
@@ -562,6 +564,7 @@ export class AddHotelComponent {
         this.removeImage();
         this.isLoading = false;
         this.cdr.markForCheck();
+        this.hotelAdded.emit();
       });
     } catch (err) {
       console.error('Error adding hotel:', err);

@@ -1,10 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { BookingService } from '../../core/services/booking.service';
+import { HotelService } from '../../core/services/hotel.service';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
 import { AddHotelComponent } from './add-hotel/add-hotel.component';
 import { Observable } from 'rxjs';
 import { Booking } from '../../core/models/booking.model';
+import { Hotel } from '../../core/models/hotel.model';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -75,7 +77,47 @@ import { Booking } from '../../core/models/booking.model';
       </section>
 
       <!-- Add Hotel Section -->
-      <app-add-hotel></app-add-hotel>
+      <app-add-hotel (hotelAdded)="onHotelAdded()"></app-add-hotel>
+
+      <!-- Hotels Management Section -->
+      <section class="hotels-section">
+        <div class="hotels-container">
+          <div class="hotels-header">
+            <div class="header-left">
+              <h3 class="section-title">Hotel Inventory</h3>
+              <p class="section-subtitle">Manage your property listings</p>
+            </div>
+          </div>
+          
+          <div class="hotels-grid" *ngIf="hotels$ | async as hotelList">
+            <div *ngIf="hotelList.length > 0; else noHotels" class="grid">
+              <div *ngFor="let hotel of hotelList" class="hotel-card">
+                <div class="hotel-image-wrapper">
+                  <img [src]="hotel.imageUrl" [alt]="hotel.name" class="hotel-image">
+                </div>
+                <div class="hotel-info">
+                  <h4 class="hotel-title">{{ hotel.name }}</h4>
+                  <p class="hotel-location">📍 {{ hotel.location }}</p>
+                  <p class="hotel-price">₹{{ hotel.pricePerNight | number:'1.0-0' }}/night</p>
+                  <p class="hotel-desc">{{ hotel.description | slice:0:80 }}...</p>
+                </div>
+                <div class="hotel-actions">
+                  <button class="delete-btn" (click)="deleteHotel(hotel.id!)">
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+            <ng-template #noHotels>
+              <div class="empty-state">
+                <div class="empty-icon">🏨</div>
+                <p class="empty-text">No hotels added yet</p>
+                <p class="empty-subtext">Add your first hotel using the form above</p>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </section>
     </main>
   `,
   styles: [`
@@ -349,9 +391,175 @@ import { Booking } from '../../core/models/booking.model';
       color: #94a3b8;
       margin: 0.5rem 0;
     }
+
+    /* Hotels Section */
+    .hotels-section {
+      margin-top: 3rem;
+      padding: 0;
+    }
+
+    .hotels-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .hotels-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .section-subtitle {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin: 0;
+    }
+
+    .hotels-grid {
+      width: 100%;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .hotel-card {
+      display: flex;
+      flex-direction: column;
+      border-radius: 1rem;
+      border: 1px solid #e2e8f0;
+      background: white;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .hotel-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px -4px rgba(6, 182, 212, 0.15);
+    }
+
+    .hotel-image-wrapper {
+      height: 200px;
+      overflow: hidden;
+      background: #f1f5f9;
+    }
+
+    .hotel-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .hotel-card:hover .hotel-image {
+      transform: scale(1.05);
+    }
+
+    .hotel-info {
+      flex: 1;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .hotel-title {
+      font-size: 1.125rem;
+      font-weight: bold;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .hotel-location {
+      font-size: 0.875rem;
+      color: #0891b2;
+      margin: 0;
+    }
+
+    .hotel-price {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #10b981;
+      margin: 0.25rem 0 0;
+    }
+
+    .hotel-desc {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 0.5rem 0;
+      line-height: 1.4;
+    }
+
+    .hotel-actions {
+      padding: 0 1.25rem 1.25rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .delete-btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      background: #fee2e2;
+      color: #dc2626;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .delete-btn:hover {
+      background: #fecaca;
+      transform: translateY(-2px);
+    }
+
+    .delete-btn:active {
+      transform: translateY(0);
+    }
   `]
 })
 export class AdminDashboardComponent {
   private bookingService = inject(BookingService);
+  private hotelService = inject(HotelService);
+  
   bookings$: Observable<Booking[]> = this.bookingService.getBookings();
+  hotels$: Observable<Hotel[]> = this.hotelService.getHotels();
+
+  async deleteHotel(hotelId: string) {
+    if (confirm('Are you sure you want to delete this hotel? This action cannot be undone.')) {
+      try {
+        await this.hotelService.deleteHotel(hotelId);
+        // Refresh hotels list
+        this.hotels$ = this.hotelService.getHotels();
+      } catch (error) {
+        console.error('Failed to delete hotel:', error);
+        alert('Failed to delete hotel. Please try again.');
+      }
+    }
+  }
+
+  onHotelAdded() {
+    // Refresh hotels list when a new hotel is added
+    this.hotels$ = this.hotelService.getHotels();
+  }
 }

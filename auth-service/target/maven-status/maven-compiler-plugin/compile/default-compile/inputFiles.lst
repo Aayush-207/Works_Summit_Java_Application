@@ -1,9 +1,12 @@
 D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\controller\AuthController.java
+D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\dto\RegisterRequest.java
 D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\AuthServiceApplication.java
 D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\dto\AuthResponse.java
 D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\dto\LoginRequest.java
 D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\exception\GlobalExceptionHandler.java
 D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\security\JwtAuthenticationFilter.java
+D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\security\SupabaseUserDetailsService.java
 D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\security\SecurityConfig.java
+D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\service\UserService.java
 D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\util\JwtUtil.java
 D:\Company\Summit Works\hotel-booking-app\auth-service\src\main\java\com\hotelbooking\authservice\service\UserDetailsServiceImpl.java

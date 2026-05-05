@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -113,7 +113,7 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class BookingCalendarComponent {
+export class BookingCalendarComponent implements OnChanges {
   @Input() unavailableDates: string[] = [];
   @Input() selectedDate: string | null = null;
   @Output() dateSelected = new EventEmitter<string>();
@@ -124,8 +124,10 @@ export class BookingCalendarComponent {
     this.generateWeek();
   }
 
-  ngOnChanges() {
-    this.generateWeek();
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['unavailableDates']) {
+      this.generateWeek();
+    }
   }
 
   generateWeek() {
