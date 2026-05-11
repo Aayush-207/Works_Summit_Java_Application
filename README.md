@@ -117,14 +117,6 @@ Pre-seeded users:
 - **[AI_USAGE.md](./AI_USAGE.md)** - AI prompts used for development
 - **[USERS_TABLE_SETUP.md](./USERS_TABLE_SETUP.md)** - SQL setup for user authentication
 
-## 🎓 Learning Resources
 
-See AI_USAGE.md for:
-- Complete prompts used for frontend development
-- Backend authentication setup prompts
-- Database schema creation prompts
-- UI/UX design prompts with exact specifications
-
----
 
 **Built with ❤️ using AI assistance** | [Architecture](./ARCHITECTURE.md) | [AI Usage](./AI_USAGE.md)
